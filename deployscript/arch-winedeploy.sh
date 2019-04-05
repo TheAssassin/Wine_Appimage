@@ -3,18 +3,21 @@
 sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
 
 pacman -Syy
-pacman -S --noconfirm wget file pacman-contrib
+pacman -S --noconfirm wget file pacman-contrib tar grep
 
 # Get Wine
-wget -nv -c https://www.playonlinux.com/wine/binaries/linux-x86/PlayOnLinux-wine-3.10-linux-x86.pol
-tar xfj PlayOnLinux-wine-*-linux-x86.pol wineversion/
+wget -nv -c https://www.playonlinux.com/wine/binaries/phoenicis/upstream-linux-x86/PlayOnLinux-wine-4.5-upstream-linux-x86.tar.gz
+mkdir wineversion
+tar xfv PlayOnLinux-wine-* -C wineversion/
+ls -al
 
-wineworkdir=(wineversion/*)
+wineworkdir=(wineversion)
 cd $wineworkdir
 
 # Add a dependency library, such as freetype font library
 dependencys=$(pactree -s -u wine |grep lib32 | xargs)
 
+mkdir bin
 wget -nv -c https://github.com/Hackerl/Wine_Appimage/releases/download/v0.9/libhookexecv.so -O bin/libhookexecv.so
 wget -nv -c https://github.com/Hackerl/Wine_Appimage/releases/download/v0.9/wine-preloader_hook -O bin/wine-preloader_hook
 
@@ -53,7 +56,11 @@ export FONTCONFIG_PATH="$HERE/etc/fonts"
 #LD
 export WINELDLIBRARY="$HERE/usr/lib/ld-linux.so.2"
 
-LD_PRELOAD="$HERE/bin/libhookexecv.so" "$WINELDLIBRARY" "$HERE/bin/wine" "$@" | cat
+if [ -n "$*" ] ; then
+    LD_PRELOAD="$HERE/bin/libhookexecv.so" "$WINELDLIBRARY" "$HERE/bin/$@" | cat
+else
+    LD_PRELOAD="$HERE/bin/libhookexecv.so" "$WINELDLIBRARY" "$HERE/bin/wine" "$@" | cat
+fi
 EOF
 
 chmod +x AppRun
@@ -61,6 +68,9 @@ chmod +x AppRun
 cp AppRun $wineworkdir
 cp resource/* $wineworkdir
 
+ls -al
+ls -al $wineworkdir
+
 ./appimagetool.AppImage --appimage-extract
 
-export ARCH=x86_64; squashfs-root/AppRun $wineworkdir
+export ARCH=x86_64; squashfs-root/AppRun -v $wineworkdir -u 'gh-releases-zsync|mmtrt|Wine_Appimage|continuous|wine*arch*.AppImage.zsync' wine-i386_${ARCH}-arch.latest.AppImage

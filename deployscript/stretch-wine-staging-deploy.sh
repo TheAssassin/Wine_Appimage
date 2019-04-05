@@ -5,8 +5,15 @@ apt update
 apt install -y aptitude wget file bzip2
 
 # Get Wine
-wget -nv -c https://www.playonlinux.com/wine/binaries/linux-x86/PlayOnLinux-wine-3.10-linux-x86.pol
-tar xfj PlayOnLinux-wine-*-linux-x86.pol wineversion/
+wget -nv -c https://dl.winehq.org/wine-builds/debian/dists/stretch/main/binary-i386/wine-staging_4.5~stretch_i386.deb
+wget -nv -c https://dl.winehq.org/wine-builds/debian/dists/stretch/main/binary-i386/wine-staging-i386_4.5~stretch_i386.deb
+
+dpkg -x wine-staging_4.5~stretch_i386.deb wineversion/
+dpkg -x wine-staging-i386_4.5~stretch_i386.deb wineversion/
+
+cp -r "wineversion/opt/"* "wineversion"
+rm -r "wineversion/opt"
+rm -rf "wineversion/usr"
 
 wineworkdir=(wineversion/*)
 cd $wineworkdir
@@ -20,7 +27,7 @@ chmod +x bin/wine-preloader_hook
 pkgcachedir='/tmp/.winedeploycache'
 mkdir -p $pkgcachedir
 
-aptitude -y -d -o dir::cache::archives="$pkgcachedir" install libwine:i386
+aptitude -y -d -o dir::cache::archives="$pkgcachedir" install libwine:i386 libva2:i386 libva-drm2:i386 libva-x11-2:i386 libvulkan1:i386
 
 find $pkgcachedir -name '*deb' ! -name 'libwine*' -exec dpkg -x {} . \;
 
@@ -39,4 +46,4 @@ cp resource/* $wineworkdir
 
 ./appimagetool.AppImage --appimage-extract
 
-export ARCH=x86_64; squashfs-root/AppRun $wineworkdir
+export ARCH=x86_64; squashfs-root/AppRun -v $wineworkdir -u 'gh-releases-zsync|mmtrt|Wine_Appimage|continuous|wine-staging*stretch.AppImage.zsync' wine-staging-i386_${ARCH}-stretch.AppImage
