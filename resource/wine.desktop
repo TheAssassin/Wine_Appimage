@@ -5,3 +5,4 @@ Icon=Wine
 Type=Application
 Categories=Network;
 Name[en_US]=Wine
+X-AppImage-Integrate=false
